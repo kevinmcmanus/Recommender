@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Recommender", "Recommender\Recommender.sqlproj", "{53A862C2-BC84-432C-918F-AF12B76C504A}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "DataFiles", "DataFiles\DataFiles.pyproj", "{7A6D4A90-0E46-4EE3-8AED-503137FF2762}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "RecommenderWebService", "RecommenderWebService\RecommenderWebService.pyproj", "{6A3E1DC7-FC95-438B-BC10-4D4A893A3FB1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,8 +21,17 @@ Global
 		{53A862C2-BC84-432C-918F-AF12B76C504A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53A862C2-BC84-432C-918F-AF12B76C504A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{53A862C2-BC84-432C-918F-AF12B76C504A}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{7A6D4A90-0E46-4EE3-8AED-503137FF2762}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A6D4A90-0E46-4EE3-8AED-503137FF2762}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A3E1DC7-FC95-438B-BC10-4D4A893A3FB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A3E1DC7-FC95-438B-BC10-4D4A893A3FB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A3E1DC7-FC95-438B-BC10-4D4A893A3FB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A3E1DC7-FC95-438B-BC10-4D4A893A3FB1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EDA1D55A-1D91-4DD4-B5A6-E89937F1EB22}
 	EndGlobalSection
 EndGlobal
