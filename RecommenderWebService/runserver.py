@@ -6,10 +6,11 @@ from os import environ
 from flask import Flask,request, jsonify
 from flask_restful import Resource, Api
 #from RecommenderWebService import app
-from rws import rws
+from rws import rws, config_jwt
 from flask_restplus import reqparse
 
 app = Flask(__name__)
+config_jwt(app)
 api = Api(app)
 api.add_resource(rws, '/Recommender')
 
