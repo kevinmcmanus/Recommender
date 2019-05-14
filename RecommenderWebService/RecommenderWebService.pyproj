@@ -19,6 +19,9 @@
     <Name>RecommenderWebService</Name>
     <RootNamespace>RecommenderWebService</RootNamespace>
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
+    <CommandLineArguments>-p foo/bar</CommandLineArguments>
+    <PythonRunWebServerCommandArguments>-h some/file</PythonRunWebServerCommandArguments>
+    <PythonDebugWebServerCommandArguments>-z no/way</PythonDebugWebServerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,6 +51,7 @@
     <Folder Include="RecommenderWebService\templates\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="FolderProfile.pubxml" />
     <Content Include="requirements.txt" />
     <Content Include="RecommenderWebService\static\content\bootstrap.css" />
     <Content Include="RecommenderWebService\static\content\bootstrap.min.css" />

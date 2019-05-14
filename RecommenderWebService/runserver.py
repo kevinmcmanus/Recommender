@@ -2,6 +2,7 @@
 This script runs the RecommenderWebService application using a development server.
 """
 
+import sys
 from os import environ
 from flask import Flask,request, jsonify
 from flask_restful import Resource, Api
@@ -15,6 +16,10 @@ api = Api(app)
 api.add_resource(rws, '/Recommender')
 
 if __name__ == '__main__':
+    print("Starting Up")
+    print(f'Length sys.arv: {len(sys.argv)}')
+    for s in sys.argv:
+        print(s)
     HOST = environ.get('SERVER_HOST', 'localhost')
     try:
         PORT = int(environ.get('SERVER_PORT', '5555'))

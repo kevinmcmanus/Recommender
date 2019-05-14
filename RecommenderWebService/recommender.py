@@ -31,7 +31,13 @@ class Recommender:
 							 (self.marketbasketsummary.Antecedent-1,
 							  self.marketbasketsummary.Consequent-1)),
 							  (ncat, ncat))
+
 		self.ac_confidence = coo_matrix((self.marketbasketsummary.ACConfidence,
+						(self.marketbasketsummary.Antecedent-1,
+						self.marketbasketsummary.Consequent-1)),
+						(ncat, ncat))
+
+		self.ac_support = coo_matrix((self.marketbasketsummary.ACSupport,
 						(self.marketbasketsummary.Antecedent-1,
 						self.marketbasketsummary.Consequent-1)),
 						(ncat, ncat))
@@ -49,7 +55,7 @@ class Recommender:
 	def __len__(self):
 		return len(self.marketbasketsummary)
 
-	def recommend(self, mb_dict, min_confidence = 0.10, Nrecs=None):
+	def recommend(self, mb_dict, min_confidence = 0.10, min_support = 0.01, NRecs=None):
 		"""
 		makes recommendations for the products in mb_dict
 		mb_dict: dictionary of Product Code, weight pairs
@@ -66,8 +72,15 @@ class Recommender:
 		c = np.zeros_like(r) #column indices, all 0 (first column)
 		weights = coo_matrix((w,(r,c)),shape = (ncat,1))
 
-		# mask out the associations below minimum confidence
-		m_lift = self.ac_lift.multiply(self.ac_confidence >= min_confidence)
+		# mask out the associations below minimum confidence and support
+		mask = coo_matrix((np.full(len(self.ac_lift.row),True,dtype=bool),
+                            (self.ac_lift.row,self.ac_lift.col)),
+                    shape=self.ac_lift.shape)
+		if min_confidence > 0:
+			mask = mask.multiply(self.ac_confidence >= min_confidence)
+		if min_support > 0:
+			mask = mask.multiply(self.ac_support >= min_support)
+		m_lift = self.ac_lift.multiply(mask)
 
 		# multiply the consequents by the weights and get those for the antecedents
 		cons = m_lift.multiply(weights)[np.unique(r)].todense()
@@ -83,10 +96,44 @@ class Recommender:
 		df = df.sort_values('AC_Lift', ascending=False)
 
 		# how many recommendations to return?
-		if Nrecs is None:
-			Nrecs = ncat # all of them
+		if NRecs is None:
+			NRecs = ncat # all of them
 
-		return df.iloc[:Nrecs].to_dict('records')
+		return df.iloc[:NRecs].to_dict('records')
+
+def args_to_params(args):
+    """
+    Get the MinSupport, MinConfidence and NRecs parameters out of the request
+    and return them in a dictionary, supplying default values if needed
+    """
+
+    params = {}
+
+    if args['MinSupport'] is not None:
+        try:
+            params['MinSupport'] = float(args['MinSupport'])
+        except:
+            params['MinSupport'] = 0.01
+    else:
+        params['MinSupport'] = 0.01
+
+    if args['MinConfidence'] is not None:
+        try:
+            params['MinConfidence'] = float(args['MinConfidence'])
+        except:
+            params['MinConfidence'] = 0.10
+    else:
+        params['MinConfidence'] = 0.10
+
+    if args['NRecs'] is not None:
+        try:
+            params['NRecs'] = int(args['NRecs'])
+        except:
+            params['NRecs'] = 5
+    else:
+        params['NRecs'] = 5
+
+    return params
 
 def args_to_mb(plist,rec: Recommender):
     """
@@ -154,4 +201,6 @@ if __name__ == "__main__":
     print(r)
     print(len(r))
 
-    print(r.recommend(mb, Nrecs=10))
+    print(r.recommend(mb, NRecs=10))
+
+    print(r.recommend(mb, NRecs=10, min_support = 0, min_confidence=0))
