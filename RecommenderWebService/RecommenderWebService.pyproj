@@ -19,7 +19,7 @@
     <Name>RecommenderWebService</Name>
     <RootNamespace>RecommenderWebService</RootNamespace>
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
-    <CommandLineArguments>-p foo/bar</CommandLineArguments>
+    <CommandLineArguments>--pcldir C:\Users\kevin\Documents\Research\Recommender\Recommender\pickled</CommandLineArguments>
     <PythonRunWebServerCommandArguments>-h some/file</PythonRunWebServerCommandArguments>
     <PythonDebugWebServerCommandArguments>-z no/way</PythonDebugWebServerCommandArguments>
   </PropertyGroup>

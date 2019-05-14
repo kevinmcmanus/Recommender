@@ -247,3 +247,4 @@ pickled/
 
 __pycache__/
 testargs.py
+*.jfm

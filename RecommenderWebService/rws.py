@@ -1,3 +1,5 @@
+import argparse
+
 from flask_restful import Resource, Api
 from flask_restplus import reqparse
 from flask_jwt import JWT, jwt_required
@@ -57,6 +59,11 @@ parser.add_argument('MinSupport', help="Minimum Support Level")
 parser.add_argument('MinConfidence', help="Minimum Confidence Level")
 parser.add_argument('NRecs', help="Number of recommendations to return")
 
-pclpath = r"C:\Users\kevin\Documents\Research\Recommender\Recommender\pickled"
-recom = Recommender(pclpath)
+#Command line arguments
+cmdparser = argparse.ArgumentParser()
+cmdparser.add_argument('--pcldir',help='directory of pickled data files')
+
+cmdargs = cmdparser.parse_args()
+
+recom = Recommender(cmdargs.pcldir)
 	

@@ -10,6 +10,7 @@ from flask_restful import Resource, Api
 from rws import rws, config_jwt
 from flask_restplus import reqparse
 
+
 app = Flask(__name__)
 config_jwt(app)
 api = Api(app)
