@@ -17,10 +17,10 @@ class Recommender:
 		import os
 
 		#get the product dimension:
-		self.products = pd.read_pickle(pclpath+os.sep+'DimProduct.pcl').set_index('Product Code')
+		self.products = pd.read_pickle(pclpath+os.sep+'DimProduct.pcl').set_index('Product code')
 
 		# product categories
-		self.categories = pd.read_pickle(pclpath+os.sep+'ProductCategories.pcl')
+		self.categories = pd.read_pickle(pclpath+os.sep+'DimCategory.pcl')
 
 		# Market basket summary
 		self.marketbasketsummary = pd.read_pickle(pclpath+os.sep+'MarketBasketSummary.pcl')
@@ -91,7 +91,7 @@ class Recommender:
 
 		# put the recommendations into an easy to consume data frame and order it by ac_lift
 		df = pd.DataFrame({	'CategoryID':self.categories.CategoryID,
-							'ConsequentCategory':self.categories.Category,
+							'ConsequentCategory':self.categories.CategoryDescription,
 							'AC_Lift': w_cons})
 		df = df.sort_values('AC_Lift', ascending=False)
 
@@ -169,38 +169,34 @@ def args_to_mb(plist,rec: Recommender):
 
 if __name__ == "__main__":
 
-    pclpath = r"C:\Users\kevin\Documents\Research\Recommender\Recommender\pickled"
+    #pclpath = r"C:\Users\kevin\Documents\Research\Recommender\Recommender\pickled"
+    pclpath = r"C:\Users\kevin\Documents\GitHub\Recommender\pickled"
     r = Recommender(pclpath)
-    argl = ['H11782000-V6-26631,0.443',
-        '00021200724077-DV2-31196,0.218',
-        '720360MMX1000PK,0.097',
-        '3M691181PK,0.083',
-        '00051128558379-31196,0.054',
-        '3M1350FB-52505,0.037',
-        '720341MMX1000PK,0.035',
-        '7203762MMX1000PK-,0.033']
+    argl = ['051138-21674,0.5142525936507282',
+    '051131-07194,0.48574740634927177']
 
     res = args_to_mb(argl,r)
     print(res)
+# """ 
+#     mb = {
+# 			#'00021200724077-DV2-31196':0.6606000107692117,
+# 			#'3M691181PK':0.33939998923078835
+# #			'3M691181PK':1.00
+# 			"H11782000-V6-26631": 0.443,
+# 			"00021200724077-DV2-31196": 0.218,
+# 			"720360MMX1000PK": 0.097,
+# 			"3M691181PK": 0.083,
+# 			"00051128558379-31196": 0.054,
+# 			"3M1350FB-52505": 0.037,
+# 			"720341MMX1000PK": 0.035,
+# 			"7203762MMX1000PK-": 0.033
 
-    mb = {
-			#'00021200724077-DV2-31196':0.6606000107692117,
-			#'3M691181PK':0.33939998923078835
-#			'3M691181PK':1.00
-			"H11782000-V6-26631": 0.443,
-			"00021200724077-DV2-31196": 0.218,
-			"720360MMX1000PK": 0.097,
-			"3M691181PK": 0.083,
-			"00051128558379-31196": 0.054,
-			"3M1350FB-52505": 0.037,
-			"720341MMX1000PK": 0.035,
-			"7203762MMX1000PK-": 0.033
-
-		}
+#         }
+# """
 
     print(r)
     print(len(r))
 
-    print(r.recommend(mb, NRecs=10))
+    print(r.recommend(res['MarketBasket'], NRecs=10))
 
-    print(r.recommend(mb, NRecs=10, min_support = 0, min_confidence=0))
+    print(r.recommend(res['MarketBasket'], NRecs=10, min_support = 0, min_confidence=0))
