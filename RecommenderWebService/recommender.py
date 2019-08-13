@@ -24,6 +24,9 @@ class Recommender:
 
 		# Market basket summary
 		self.marketbasketsummary = pd.read_pickle(pclpath+os.sep+'MarketBasketSummary.pcl')
+		
+		# Top 5 products (SKUs) in each category
+		self.Top5inCategory = pd.read_pickle(pclpath+os.sep+'Top5inCategory.pcl')
 
 		# load the antecedent/consequent lift and confidence into sparse arrays.
 		ncat = len(self.categories) # shape of the associations
@@ -74,8 +77,8 @@ class Recommender:
 
 		# mask out the associations below minimum confidence and support
 		mask = coo_matrix((np.full(len(self.ac_lift.row),True,dtype=bool),
-                            (self.ac_lift.row,self.ac_lift.col)),
-                    shape=self.ac_lift.shape)
+							(self.ac_lift.row,self.ac_lift.col)),
+					shape=self.ac_lift.shape)
 		if min_confidence > 0:
 			mask = mask.multiply(self.ac_confidence >= min_confidence)
 		if min_support > 0:
@@ -87,96 +90,115 @@ class Recommender:
 
 		# summarize across antecedents
 		w_cons = cons.sum(axis=0) #doesn't flatten since cons is a matrix
-		w_cons = np.squeeze(np.asarray(w_cons)) #it's flat now!
+		w_cons = np.squeeze(np.asarray(w_cons)) #it's flat now! and indexed by category
+
+		#weight product support within category by the products corresponding category lift (w_cons)
+		sku_cat_lift = w_cons[self.Top5inCategory.CategoryID-1]
+		sku_weight = self.Top5inCategory.ProdCatSupport * sku_cat_lift
+
+		#sort by weighted lift
+		sku_sort = sku_weight.argsort()
+		# slicer for the last 5 elements of a vector in reverse order
+		slicer = slice(-1,-6,-1)
+
+		sku_ids = sku_sort[slicer] #indices into the Top5inCategory dataframe
+		prod_ids = self.Top5inCategory.ProdID.iloc[sku_ids]+1
+		cat_ids = self.Top5inCategory.CategoryID.iloc[sku_ids]+1
 
 		# put the recommendations into an easy to consume data frame and order it by ac_lift
-		df = pd.DataFrame({	'CategoryID':self.categories.CategoryID,
-							'ConsequentCategory':self.categories.CategoryDescription,
-							'AC_Lift': w_cons})
-		df = df.sort_values('AC_Lift', ascending=False)
+		df = pd.DataFrame({	'CategoryID':self.categories.CategoryID.loc[cat_ids].values,
+							'ConsequentCategoryCode':self.categories.CategoryCode.loc[cat_ids].values,
+							'ConsequentCategory':self.categories.CategoryDescription.loc[cat_ids].values,
+							'ProductCode': self.Top5inCategory['Product Code'].iloc[sku_ids].values,
+							'ProductDescription':self.Top5inCategory['Product Description'].iloc[sku_ids].values,
+							'CategoryLift': sku_cat_lift[slicer],
+							'SkuLift': sku_weight[slicer],
+							'SkuSupportInCategory': self.Top5inCategory.ProdCatSupport.iloc[sku_ids].values})
+
+
 
 		# how many recommendations to return?
 		if NRecs is None:
 			NRecs = ncat # all of them
 
-		return df.iloc[:NRecs].to_dict('records')
+		return df.to_dict('records')
 
 def args_to_params(args):
-    """
-    Get the MinSupport, MinConfidence and NRecs parameters out of the request
-    and return them in a dictionary, supplying default values if needed
-    """
+	"""
+	Get the MinSupport, MinConfidence and NRecs parameters out of the request
+	and return them in a dictionary, supplying default values if needed
+	"""
 
-    params = {}
+	params = {}
 
-    if args['MinSupport'] is not None:
-        try:
-            params['MinSupport'] = float(args['MinSupport'])
-        except:
-            params['MinSupport'] = 0.01
-    else:
-        params['MinSupport'] = 0.01
+	if args['MinSupport'] is not None:
+		try:
+			params['MinSupport'] = float(args['MinSupport'])
+		except:
+			params['MinSupport'] = 0.01
+	else:
+		params['MinSupport'] = 0.01
 
-    if args['MinConfidence'] is not None:
-        try:
-            params['MinConfidence'] = float(args['MinConfidence'])
-        except:
-            params['MinConfidence'] = 0.10
-    else:
-        params['MinConfidence'] = 0.10
+	if args['MinConfidence'] is not None:
+		try:
+			params['MinConfidence'] = float(args['MinConfidence'])
+		except:
+			params['MinConfidence'] = 0.10
+	else:
+		params['MinConfidence'] = 0.10
 
-    if args['NRecs'] is not None:
-        try:
-            params['NRecs'] = int(args['NRecs'])
-        except:
-            params['NRecs'] = 5
-    else:
-        params['NRecs'] = 5
+	if args['NRecs'] is not None:
+		try:
+			params['NRecs'] = int(args['NRecs'])
+		except:
+			params['NRecs'] = 5
+	else:
+		params['NRecs'] = 5
 
-    return params
+	return params
 
 def args_to_mb(plist,rec: Recommender):
-    """
-    Converts url argument of form &Product=pcode,share to a market basket dict
-    of the form pcode:share with some error checking along the way
-    """
-    mb = {}
-    result = {'ValidInputs':[], 'Errors':[]}
-    for p in plist:
-        try:
-            pcode, share = p.split(',')
-        except:
-            result['Errors'].append(f'Invalid Product Specification: {p}, probably missing \',<share>\'')
-            continue
+	"""
+	Converts url argument of form &Product=pcode,share to a market basket dict
+	of the form pcode:share with some error checking along the way
+	"""
+	mb = {}
+	result = {'ValidInputs':[], 'Errors':[]}
+	for p in plist:
+		try:
+			pcode, share = p.split(',')
+		except:
+			result['Errors'].append(f'Invalid Product Specification: {p}, probably missing \',<share>\'')
+			continue
 
-        try:
-            p = rec.products.loc[pcode]
-        except:
-            result['Errors'].append(f'Invalid Product Code: {pcode}')
-            continue
+		try:
+			p = rec.products.loc[pcode]
+		except:
+			result['Errors'].append(f'Invalid Product Code: {pcode}')
+			continue
 
-        try:
-            s=float(share)
-        except:
-            result['Errors'].append(f'Invalid Product Share for Product: {pcode}, Share: {share}')
-            continue
-        
-        result['ValidInputs'].append(f'{pcode}: {p["Product Description"]}')
-        mb[pcode]=float(s)
+		try:
+			s=float(share)
+		except:
+			result['Errors'].append(f'Invalid Product Share for Product: {pcode}, Share: {share}')
+			continue
+		
+		result['ValidInputs'].append(f'{pcode}: {p["Product Description"]}')
+		mb[pcode]=float(s)
 
-    result['MarketBasket'] = mb
-    return result
+	result['MarketBasket'] = mb
+	return result
 
 if __name__ == "__main__":
 
-    #pclpath = r"C:\Users\kevin\Documents\Research\Recommender\Recommender\pickled"
-    pclpath = r"C:\Users\kevin\Documents\GitHub\Recommender\pickled"
-    r = Recommender(pclpath)
-    argl = ['051138-21674,0.5142525936507282',
-    '051131-07194,0.48574740634927177']
+	#pclpath = r"C:\Users\kevin\Documents\Research\Recommender\Recommender\pickled"
+	pclpath = r"C:\Users\kevin\Documents\GitHub\Recommender\pickled"
+	r = Recommender(pclpath)
+	argl = ['051138-21674,0.5142525936507282',
+	'051131-07194,0.48574740634927177']
 
-    res = args_to_mb(argl,r)
-    print(res)
+	res = args_to_mb(argl,r)
+	print(res)
 # """ 
 #     mb = {
 # 			#'00021200724077-DV2-31196':0.6606000107692117,
@@ -194,9 +216,9 @@ if __name__ == "__main__":
 #         }
 # """
 
-    print(r)
-    print(len(r))
+	print(r)
+	print(len(r))
 
-    print(r.recommend(res['MarketBasket'], NRecs=10))
+	print(r.recommend(res['MarketBasket'], NRecs=10))
 
-    print(r.recommend(res['MarketBasket'], NRecs=10, min_support = 0, min_confidence=0))
+	print(r.recommend(res['MarketBasket'], NRecs=10, min_support = 0, min_confidence=0))
